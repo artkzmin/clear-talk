@@ -1,0 +1,16 @@
+from typing import Protocol, runtime_checkable, Any
+
+
+@runtime_checkable
+class SessionInterface(Protocol):
+    async def commit(self) -> None: ...
+    async def execute(self) -> Any: ...
+    async def rollback(self) -> None: ...
+    async def close(self) -> None: ...
+
+
+@runtime_checkable
+class BaseRepositoryInterface(Protocol):
+    session: SessionInterface
+
+    def __init__(self, session: SessionInterface) -> None: ...

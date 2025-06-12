@@ -1,0 +1,6 @@
+from typing import Final
+
+STR_ID_LENGTH: Final = 128
+INT_ID_MAX_VALUE: Final = 2_147_483_647
+MAX_CONTEXT_TOKENS: Final = 128_000
+MAX_OUTPUT_TOKENS: Final = 128_000
