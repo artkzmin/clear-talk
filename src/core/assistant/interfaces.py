@@ -1,11 +1,19 @@
 from typing import Protocol, runtime_checkable
-from src.core.assistant.entities import AssistantChat, AssistantModel
+from src.core.message.entities import DecryptedMessage
 
 
 @runtime_checkable
 class AssistantClientInterface(Protocol):
-    assistant_model: AssistantModel
+    async def get_chat_completion_answer(
+        self, messages_chain: list[DecryptedMessage]
+    ) -> str:
+        """
+        Raises:
+        src.core.assistant.exceptions.AssistantClientException:
+            If the assistant client fails to generate a response.
+        """
 
-    def __init__(self, assistant_model: AssistantModel) -> None: ...
 
-    async def get_chat_completion_answer_content(self, chat: AssistantChat) -> str: ...
+@runtime_checkable
+class TokenUtilityInterface(Protocol):
+    def get_tokens_count(self, string: str) -> int: ...

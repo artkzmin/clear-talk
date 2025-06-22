@@ -1,10 +1,17 @@
+import os
 from pathlib import Path
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Literal
+from dotenv import load_dotenv
 
-BASE_DIR: Path = Path(__file__).parent.parent
-ENV_PATH: Path = BASE_DIR / "config" / ".env"
+
+config_file_name = os.getenv("CLEAR_TALK_CONFIG", ".env")
+
+BASE_DIR: Path = Path(__file__).parent.parent.parent
+ENV_PATH: Path = BASE_DIR / "config" / config_file_name
+
+load_dotenv(ENV_PATH, override=True)
 
 
 class DBSettings(BaseModel):
@@ -22,15 +29,33 @@ class DBSettings(BaseModel):
         )
 
 
-class APISettings(BaseModel):
-    url: HttpUrl
-    key: str
-
-
 class AssistantSettings(BaseModel):
-    model_name: str
+    class AssistantModelSettings(BaseModel):
+        name: str
+        tokeniser: str
+        temperature: float
+
+    model: AssistantModelSettings
     system_message: str
-    api: APISettings
+    api_key: str
+
+
+class TelegramSettings(BaseModel):
+    admin_id: int
+    bot_token: str
+
+
+class LogsSettings(BaseModel):
+    dir_path: Path
+
+    @field_validator("dir_path", mode="before")
+    def resolve_dir_path(cls, v: str | Path) -> Path:
+        return Path(v).resolve()
+
+
+class SecuritySettings(BaseModel):
+    hash_key: str
+    encrypt_key: str
 
 
 class Settings(BaseSettings):
@@ -38,6 +63,9 @@ class Settings(BaseSettings):
 
     db: DBSettings
     assistant: AssistantSettings
+    telegram: TelegramSettings
+    logs: LogsSettings
+    security: SecuritySettings
 
     model_config = SettingsConfigDict(
         env_file=ENV_PATH,

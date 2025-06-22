@@ -1,38 +1,25 @@
-from abc import ABC, abstractmethod
 from uuid import UUID
-from pydantic import BaseModel
-from src.core.abc.entities import BaseEntityUUID
+from datetime import datetime
+from src.core.abc.entities import BaseEntityUUID, BaseEntity
 from src.core.message.enums import MessageSenderType
 
 
-class Message(BaseEntityUUID):
-    sender_type: MessageSenderType
+class EncryptedMessage(BaseEntityUUID):
+    sender: MessageSenderType
+    encrypted_content: str
+    previous_message_id: UUID | None = None
+    user_id: UUID
+    created_at: datetime
+
+
+class DecryptedMessage(BaseEntityUUID):
+    sender: MessageSenderType
     content: str
     previous_message_id: UUID | None = None
+    user_id: UUID
+    created_at: datetime
 
 
-class BaseMessageInput(BaseModel, ABC):
-    @abstractmethod
-    async def as_str(self) -> str:
-        pass
-
-
-class SingleMessageInput(BaseMessageInput):
+class InputMessage(BaseEntity):
     content: str
-
-    async def as_str(self) -> str:
-        return self.content
-
-
-class DialogMessage(BaseModel):
-    sender_name: str
-    content: str
-
-
-class DialogInput(BaseMessageInput):
-    messages: list[DialogMessage]
-
-    async def as_str(self) -> str:
-        return "\n".join(
-            f"{msg.sender.first_name}: {msg.content}" for msg in self.messages
-        )
+    user_id: UUID

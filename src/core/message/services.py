@@ -1,94 +1,78 @@
-from typing import TypeVar
 from uuid import UUID
 from datetime import datetime
-from src.core.storage.service import StorageService
-from src.core.message.entities import BaseMessageInput, Message
+from src.core.interfaces import StorageInterface
+from src.core.message.entities import EncryptedMessage, InputMessage, DecryptedMessage
 from src.core.message.enums import MessageSenderType
-from src.core.message.exceptions import (
-    LastMessageSenderRepeatsException,
-    CannotCreateSystemMessageException,
-)
-
-T = TypeVar("T", bound=BaseMessageInput)
+from src.core.message.exceptions import LastMessageSenderRepeatsException
+from src.core.interfaces import EncryptorUtilityInterface
 
 
 class MessageService:
-    def __init__(self, storage: StorageService):
-        self.storage = storage
+    def __init__(self, storage: StorageInterface, encryptor: EncryptorUtilityInterface):
+        self._storage = storage
+        self._encryptor = encryptor
 
-    async def _add_message(
+    async def _create_message(
         self,
-        message_input: T,
-        user_id: UUID,
-        message_sender_type: MessageSenderType,
+        message: InputMessage,
+        sender: MessageSenderType,
         commit: bool = False,
     ) -> UUID:
-        last_message = await self.storage.message.get_last_message(user_id)
+        last_message = await self._storage.message.get_last_message(message.user_id)
         if last_message is not None:
-            if last_message.sender_type == message_sender_type:
-                raise LastMessageSenderRepeatsException(sender_type=message_sender_type)
-            previous_message_id = last_message.id_
+            if last_message.sender == sender:
+                raise LastMessageSenderRepeatsException(sender=sender)
+            previous_message_id = last_message.id
         else:
             previous_message_id = None
-        message = Message(
-            content=await message_input.as_str(),
-            sender_type=message_sender_type,
+        message = EncryptedMessage(
+            encrypted_content=self._encryptor.encrypt(message.content),
+            sender=sender,
             previous_message_id=previous_message_id,
+            user_id=message.user_id,
+            created_at=datetime.now(),
         )
 
-        message_id = await self.storage.message.create_message(message)
+        message_id = await self._storage.message.create_message(message)
         if commit:
-            await self.storage.commit()
+            await self._storage.commit()
         return message_id
 
-    async def add_user_message(
-        self, message_input: T, user_id: UUID, commit: bool = False
+    async def create_user_message(
+        self, message: InputMessage, commit: bool = False
     ) -> UUID:
-        return await self._add_message(
-            message_input=message_input,
-            user_id=user_id,
-            message_sender_type=MessageSenderType.USER,
+        return await self._create_message(
+            message=message,
+            sender=MessageSenderType.USER,
             commit=commit,
         )
 
-    async def add_assistant_message(
-        self, message_input: T, user_id: UUID, commit: bool = False
+    async def create_assistant_message(
+        self, message: InputMessage, commit: bool = False
     ) -> UUID:
-        return await self._add_message(
-            message_input=message_input,
-            user_id=user_id,
-            message_sender_type=MessageSenderType.ASSISTANT,
+        return await self._create_message(
+            message=message,
+            sender=MessageSenderType.ASSISTANT,
             commit=commit,
         )
 
-    async def add_system_message(
-        self, user_id: UUID, system_message_content: str, commit: bool = False
-    ) -> UUID:
-        last_message = await self.storage.message.get_last_message(user_id)
-        if last_message is not None:
-            raise CannotCreateSystemMessageException()
-        message = Message(
-            content=system_message_content, sender_type=MessageSenderType.SYSTEM
-        )
-        message_id = await self.storage.message.create_message(message)
-        if commit:
-            await self.storage.commit()
-        return message_id
-
-    async def edit_all_system_messages_content(
-        self, new_content: str, commit: bool = False
-    ) -> None:
-        await self.storage.message.update_all_system_messages_content(new_content)
-        if commit:
-            await self.storage.commit()
-
-    async def get_messages_chain(self, user_id: UUID) -> list[Message]:
-        messages = await self.storage.message.get_messages_chain(user_id)
-        return messages
+    async def get_messages_chain(self, user_id: UUID) -> list[DecryptedMessage]:
+        messages_chain = await self._storage.message.get_messages_chain(user_id)
+        return [
+            DecryptedMessage(
+                id=m.id,
+                sender=m.sender,
+                content=self._encryptor.decrypt(m.encrypted_content),
+                previous_message_id=m.previous_message_id,
+                user_id=m.user_id,
+                created_at=m.created_at,
+            )
+            for m in messages_chain
+        ]
 
     async def get_count_user_messages_in_datetime_interval(
         self, user_id: UUID, start_date: datetime, end_date: datetime
     ) -> int:
-        return await self.storage.message.get_count_user_messages_in_datetime_interval(
+        return await self._storage.message.get_count_user_messages_in_datetime_interval(
             user_id=user_id, start_date=start_date, end_date=end_date
         )

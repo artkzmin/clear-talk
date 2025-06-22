@@ -1,5 +1,5 @@
 from enum import StrEnum
 
 
-class ExternalService(StrEnum):
-    TELEGRAM = "telegram"
+class ExternalServiceType(StrEnum):
+    TELEGRAM = "TELEGRAM"

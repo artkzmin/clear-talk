@@ -1,58 +1,43 @@
-from uuid import UUID
-from src.core.message.services import MessageService, T
-from src.core.assistant.mappers import AssistantChatMapper
-from src.core.assistant.interfaces import AssistantClientInterface
-from src.core.assistant.entities import AssistantModel, AssistantChatMessage
-from src.core.message.enums import MessageSenderType
-from src.core.plan.services import PlanService, UserPlanService
+from src.core.message.services import MessageService
+from src.core.message.entities import InputMessage
+from src.core.assistant.interfaces import (
+    AssistantClientInterface,
+    TokenUtilityInterface,
+)
 from src.core.assistant.exceptions import AssistantClientException
-from src.core.token.services import TokenService
-from src.core.storage.service import StorageService
+from src.core.interfaces import StorageInterface, EncryptorUtilityInterface
 
 
 class AssistantService:
     def __init__(
         self,
-        storage: StorageService,
-        message_service: type[MessageService],
-        user_plan_service: type[UserPlanService],
-        plan_service: type[PlanService],
-        assistant_client: type[AssistantClientInterface],
-        token_service: type[TokenService],
-        assistant_model: AssistantModel,
+        storage: StorageInterface,
+        assistant_client: AssistantClientInterface,
+        token_utility: TokenUtilityInterface,
+        encryptor: EncryptorUtilityInterface,
     ) -> None:
-        self.storage = storage
-        self.message_service = message_service(storage)
-        self.user_plan_service = user_plan_service(
-            storage=storage,
-            message_service=message_service,
-            plan_service=plan_service,
-            token_service=token_service,
-        )
-        self.assistant_client = assistant_client(assistant_model=assistant_model)
+        self._storage = storage
+        self._message_service = MessageService(storage=storage, encryptor=encryptor)
+        self._assistant_client = assistant_client
+        self._token_utility = token_utility
 
-    async def get_assistant_answer(
-        self, message_input: T, user_id: UUID
-    ) -> AssistantChatMessage:
-        await self.user_plan_service.check_user_plan(user_id)
-        await self.message_service.add_user_message(message_input, user_id)
-        messages = await self.message_service.get_messages_chain(user_id)
-        assitant_chat = AssistantChatMapper.from_messages(messages)
+    async def get_assistant_answer(self, user_message: InputMessage) -> str:
+        await self._message_service.create_user_message(user_message, commit=True)
+
+        messages_chain = await self._message_service.get_messages_chain(
+            user_message.user_id
+        )
         try:
-            assistant_completion_content = (
-                await self.assistant_client.get_chat_completion_answer_content(
-                    assitant_chat
-                )
+            assistant_answer = await self._assistant_client.get_chat_completion_answer(
+                messages_chain
             )
         except AssistantClientException as e:
             raise e
-        assistant_message = AssistantChatMessage(
-            content=assistant_completion_content,
-            sender=MessageSenderType.ASSISTANT,
+        await self._message_service.create_assistant_message(
+            InputMessage(
+                content=assistant_answer,
+                user_id=user_message.user_id,
+            )
         )
-        await self.message_service.add_assistant_message(
-            assistant_message,
-            user_id,
-        )
-        await self.storage.commit()
-        return assistant_message
+        await self._storage.commit()
+        return assistant_answer

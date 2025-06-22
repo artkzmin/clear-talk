@@ -1,52 +1,57 @@
-from uuid import UUID
-from src.core.storage.service import StorageService
-from src.core.user.entities import User
+from datetime import datetime
+from src.core.interfaces import StorageInterface
+from src.core.user.entities import InputUser, User
 from src.core.plan.enums import PlanType
-from src.core.plan.services import PlanService, UserPlanService
+from src.core.plan.services import PlanService
 from src.core.message.services import MessageService
-from src.core.user.exceptions import UserNotFoundException
-from src.core.token.services import TokenService
+from src.core.user.exceptions import UserNotFoundException, UserAlreadyExistsException
+from src.core.interfaces import HasherUtilityInterface, EncryptorUtilityInterface
 
 
 class UserService:
     def __init__(
         self,
-        storage: StorageService,
-        plan_service: type[PlanService],
-        user_plan_service: type[UserPlanService],
-        message_service: type[MessageService],
-        token_service: type[TokenService],
+        storage: StorageInterface,
+        hasher: HasherUtilityInterface,
+        encryptor: EncryptorUtilityInterface,
     ) -> None:
-        self.storage = storage
-        self.plan_service = plan_service(storage=storage)
-        self.user_plan_service = user_plan_service(
-            storage=storage,
-            message_service=message_service,
-            plan_service=plan_service,
-            token_service=token_service,
-        )
-        self.message_service = message_service(storage=storage)
+        self._storage = storage
+        self._plan_service = PlanService(storage=storage)
+        self._message_service = MessageService(storage=storage, encryptor=encryptor)
+        self._hasher = hasher
+        self._encryptor = encryptor
 
-    async def add_user_with_plan_and_system_message(
-        self, user: User, system_message_content: str
-    ) -> UUID:
-        user_id = await self.storage.user.create_user(user)
-        plan_id = await self.plan_service.get_plan(type_=PlanType.FREE)
-        await self.user_plan_service.create_plan_for_user(
-            user_id=user_id, plan_id=plan_id
+    async def create_user(self, input_user: InputUser) -> User:
+        plan = await self._plan_service.get_plan(type_=PlanType.FREE)
+        now = datetime.now()
+        user = User(
+            hashed_external_id=self._hasher.get_hash(input_user.external_id),
+            external_service=input_user.external_service,
+            created_at=now,
+            plan_id=plan.id,
+            plan_activated_at=now,
         )
-        await self.message_service.add_system_message(
-            user_id=user_id, system_message_content=system_message_content
-        )
-        await self.storage.commit()
-        return user_id
+        try:
+            user_id = await self._storage.user.create_user(user)
+        except UserAlreadyExistsException as e:
+            raise e
 
-    async def check_user_exists(self, user_id: UUID) -> None:
-        if not await self.storage.user.is_user_exists(user_id) > 0:
-            raise UserNotFoundException()
+        await self._storage.commit()
+        user.id = user_id
+        return user
+
+    async def is_user_exists(self, external_user_id: str) -> bool:
+        hashed_external_user_id = self._hasher.get_hash(external_user_id)
+        return await self._storage.user.is_user_exists(hashed_external_user_id)
 
     async def get_user_by_external_id(self, external_user_id: str) -> User:
-        return await self.storage.user.get_user_by_external_id(external_user_id)
+        hashed_external_user_id = self._hasher.get_hash(external_user_id)
+        user = await self._storage.user.get_user_by_external_id(hashed_external_user_id)
+        if user is None:
+            raise UserNotFoundException()
+        return user
 
-    async def get_user_by_id(self, user_id: UUID) -> User:
-        return await self.storage.user.get_user_by_id(user_id)
+    async def get_or_create_user(self, input_user: InputUser) -> User:
+        if await self.is_user_exists(input_user.external_id):
+            return await self.get_user_by_external_id(input_user.external_id)
+        return await self.create_user(input_user)
