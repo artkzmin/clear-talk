@@ -15,27 +15,27 @@ build-job:
   before_script:
     - cp ${ENV} docker/.env
   script:
-    - docker build -f docker/Dockerfile -t ct-image .
+    - docker build -f docker/Dockerfile -t clear-talk-image .
 
 lint-job:
   stage: lint_format
   script:
-    - docker run --rm --network clear-talk-network ct-image ruff check
+    - docker run --rm --network clear-talk-network clear-talk-image ruff check
 
 format-job:
   stage: lint_format
   script:
-    - docker run --rm --network clear-talk-network ct-image ruff format --check
+    - docker run --rm --network clear-talk-network clear-talk-image ruff format --check
 
 tests-job:
   stage: tests
   script:
-    - docker run --rm --network clear-talk-network ct-image pytest -s -v
+    - docker run --rm --network clear-talk-network clear-talk-image pytest -s -v
 
 migrations-job:
   stage: migrations
   script:
-    - docker run --rm --network clear-talk-network ct-image alembic upgrade head
+    - docker run --rm --network clear-talk-network clear-talk-image alembic upgrade head
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 

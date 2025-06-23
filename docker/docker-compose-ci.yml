@@ -16,7 +16,7 @@ services:
 
   clear-talk:
     container_name: 'clear-talk'
-    image: ct-image:latest
+    image: clear-talk-image:latest
     restart: unless-stopped
     networks:
       - clear-talk-network
