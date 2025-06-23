@@ -1,5 +1,14 @@
+venv:
+	venv/bin/activate
+
 run:
-	. venv/bin/activate && python -m src.main
+	python -m src.main
 
 alembic:
-	. venv/bin/activate && alembic upgrade head
+	alembic upgrade head
+
+docker-run:
+	sudo docker compose -f docker/docker-compose.yml up --build -d
+
+docker-logs:
+	sudo docker logs -f clear-talk

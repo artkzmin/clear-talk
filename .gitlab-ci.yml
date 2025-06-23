@@ -1,0 +1,47 @@
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+
+stages:
+  - build
+  - lint_format
+  - migrations
+  - tests
+  - deploy
+
+build-job:
+  stage: build
+  before_script:
+    - cp ${ENV} docker/.env
+  script:
+    - docker build -f docker/Dockerfile -t ct-image .
+
+lint-job:
+  stage: lint_format
+  script:
+    - docker run --rm --network clear-talk-network ct-image ruff check
+
+format-job:
+  stage: lint_format
+  script:
+    - docker run --rm --network clear-talk-network ct-image ruff format --check
+
+tests-job:
+  stage: tests
+  script:
+    - docker run --rm --network clear-talk-network ct-image pytest -s -v
+
+migrations-job:
+  stage: migrations
+  script:
+    - docker run --rm --network clear-talk-network ct-image alembic upgrade head
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+deploy-job:
+  stage: deploy
+  script:
+    - docker compose -f docker/docker-compose-ci.yml up -d
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'

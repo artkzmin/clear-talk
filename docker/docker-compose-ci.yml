@@ -1,0 +1,26 @@
+services:
+  clear-talk-postgres:
+    container_name: 'clear-talk-postgres'
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${CONFIG__DB__USER}
+      POSTGRES_PASSWORD: ${CONFIG__DB__PASSWORD}
+      POSTGRES_DB: ${CONFIG__DB__NAME}
+    volumes:
+      - clear-talk-pgdata:/var/lib/postgresql/data
+    ports:
+      - ${CONFIG__DB__PORT}:5432
+    networks:
+      - clear-talk-network
+
+  clear-talk:
+    container_name: 'clear-talk'
+    image: ct-image:latest
+    restart: unless-stopped
+    networks:
+      - clear-talk-network
+
+networks:
+  clear-talk-network:
+    external: True
