@@ -34,7 +34,7 @@ class MessageRepository(
         stmt = (
             select(MessageModel)
             .filter(
-                MessageModel.id.notin_(stmt_subq),
+                MessageModel.id.notin_(select(stmt_subq)),
                 MessageModel.user_id == user_id,
             )
             .limit(1)

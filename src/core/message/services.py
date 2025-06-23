@@ -21,7 +21,7 @@ class MessageService:
         last_message = await self._storage.message.get_last_message(message.user_id)
         if last_message is not None:
             if last_message.sender == sender:
-                raise LastMessageSenderRepeatsException(sender=sender)
+                raise LastMessageSenderRepeatsException()
             previous_message_id = last_message.id
         else:
             previous_message_id = None

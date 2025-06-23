@@ -22,7 +22,7 @@ class AssistantService:
         self._token_utility = token_utility
 
     async def get_assistant_answer(self, user_message: InputMessage) -> str:
-        await self._message_service.create_user_message(user_message, commit=True)
+        await self._message_service.create_user_message(user_message)
 
         messages_chain = await self._message_service.get_messages_chain(
             user_message.user_id

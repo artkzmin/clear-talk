@@ -20,7 +20,7 @@ def setup_logging() -> None:
                 "console": {
                     "class": "logging.StreamHandler",
                     "formatter": "default",
-                    "level": "DEBUG",
+                    "level": "INFO",
                 },
                 "file": {
                     "class": "logging.FileHandler",
@@ -31,7 +31,7 @@ def setup_logging() -> None:
                 },
             },
             "root": {
-                "level": "DEBUG",
+                "level": "INFO",
                 "handlers": ["console", "file"],
             },
             "loggers": {
@@ -40,8 +40,13 @@ def setup_logging() -> None:
                     "handlers": ["console", "file"],
                     "propagate": False,
                 },
-                "app": {  # <-- Добавляем этот логгер
-                    "level": "DEBUG",
+                "app": {
+                    "level": "INFO",
+                    "handlers": ["console", "file"],
+                    "propagate": False,
+                },
+                "httpcore.http11": {
+                    "level": "INFO",
                     "handlers": ["console", "file"],
                     "propagate": False,
                 },
