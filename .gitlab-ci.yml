@@ -15,6 +15,7 @@ build-job:
   before_script:
     - cp ${ENV} docker/.env
   script:
+    - docker network create clear-talk-network || true
     - docker build --network clear-talk-network -f docker/Dockerfile -t clear-talk-image .
 
 lint-job:
