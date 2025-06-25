@@ -20,28 +20,29 @@ build-job:
 lint-job:
   stage: lint_format
   script:
-    - docker run --rm --network clear-talk-network clear-talk-image ruff check
+    - docker run --rm --network clear-talk-network clear-talk-image make lint
 
 format-job:
   stage: lint_format
   script:
-    - docker run --rm --network clear-talk-network clear-talk-image ruff format --check
+    - docker run --rm --network clear-talk-network clear-talk-image make format
 
 tests-job:
   stage: tests
   script:
-    - docker run --rm --network clear-talk-network clear-talk-image pytest -s -v
+    - docker run --rm --network clear-talk-network clear-talk-image make test
 
 migrations-job:
   stage: migrations
   script:
-    - docker run --rm --network clear-talk-network clear-talk-image alembic upgrade head
+    - docker run --rm --network clear-talk-network clear-talk-image make alembic
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
 deploy-job:
   stage: deploy
   script:
-    - docker compose -f docker/docker-compose-ci.yml up -d
+    - docker compose -f docker/docker-compose-ci.yml up --build -d
+    - docker image prune -f
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
