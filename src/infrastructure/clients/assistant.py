@@ -19,6 +19,9 @@ class OpenAIAssistantClient(AssistantClientInterface):
             model_name=settings.assistant.model.name,
             openai_api_key=settings.assistant.api_key,
             temperature=settings.assistant.model.temperature,
+            openai_proxy=(
+                settings.proxy.socks5 if settings.assistant.use_proxy else None
+            ),
         )
 
     async def get_chat_completion_answer(

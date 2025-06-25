@@ -23,11 +23,14 @@ def setup_logging() -> None:
                     "level": "INFO",
                 },
                 "file": {
-                    "class": "logging.FileHandler",
+                    "class": "logging.handlers.TimedRotatingFileHandler",
                     "filename": f"{settings.logs.dir_path}/app.log",
                     "formatter": "default",
                     "level": "INFO",
                     "encoding": "utf-8",
+                    "when": "midnight",
+                    "backupCount": settings.logs.max_log_files,
+                    "utc": True,
                 },
             },
             "root": {

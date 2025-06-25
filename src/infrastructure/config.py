@@ -46,6 +46,7 @@ class Settings(BaseSettings):
         model: AssistantModelSettings
         system_message: str
         api_key: str
+        use_proxy: bool
 
     class TelegramSettings(BaseModel):
         admin_id: int
@@ -53,6 +54,7 @@ class Settings(BaseSettings):
 
     class LogsSettings(BaseModel):
         dir_path: Path
+        max_log_files: int
 
         @field_validator("dir_path", mode="before")
         def resolve_dir_path(cls, v: str | Path) -> Path:
@@ -62,12 +64,28 @@ class Settings(BaseSettings):
         hash_key: str
         encrypt_key: str
 
+    class ProxySettings(BaseModel):
+        host: str
+        port: int
+        user: str
+        password: str
+
+        def is_configured(self) -> bool:
+            return all([self.host, self.port, self.user, self.password])
+
+        @property
+        def socks5(self) -> str | None:
+            if not self.is_configured():
+                return None
+            return f"socks5://{self.user}:{self.password}@{self.host}:{self.port}"
+
     mode: ModeType
     db: DBSettings
     assistant: AssistantSettings
     telegram: TelegramSettings
     logs: LogsSettings
     security: SecuritySettings
+    proxy: ProxySettings
 
     model_config = SettingsConfigDict(
         env_file=ENV_PATH,
