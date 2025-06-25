@@ -13,7 +13,7 @@ stages:
 build-job:
   stage: build
   before_script:
-    - cp ${ENV} docker/.env
+    - cp ${ENV} config/.env
   script:
     - docker build --network host -f docker/Dockerfile -t clear-talk-image .
 

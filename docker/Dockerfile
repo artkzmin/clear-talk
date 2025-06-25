@@ -13,6 +13,6 @@ COPY Makefile Makefile
 COPY docker/run.sh docker/run.sh
 RUN chmod +x docker/run.sh
 
-COPY docker/.env config/.env
+COPY config/.env config/.env
 
 CMD ["sh", "docker/run.sh"]
