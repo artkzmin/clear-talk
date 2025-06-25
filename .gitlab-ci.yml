@@ -1,3 +1,7 @@
+services:
+  - name: docker:dind
+    command: ["--dns", "8.8.8.8", "--dns", "8.8.4.4"]
+
 workflow:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
