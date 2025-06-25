@@ -11,7 +11,7 @@ format:
 	ruff format --check
 
 test:
-	pytest -s -v
+	pytest tests/ -s -v
 
 alembic:
 	alembic upgrade head
