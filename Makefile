@@ -1,14 +1,26 @@
-venv:
-	venv/bin/activate
+venv-run:
+	. venv/bin/activate
 
 run:
 	python -m src.main
+
+lint:
+	ruff check
+
+format:
+	ruff format --check
+
+test:
+	pytest -s -v
 
 alembic:
 	alembic upgrade head
 
 docker-run:
-	sudo docker compose -f docker/docker-compose.yml up --build -d
+	docker compose -f docker/docker-compose.yml up --build -d
 
 docker-logs:
-	sudo docker logs -f clear-talk
+	docker logs -f clear-talk
+
+docker-clear:
+	docker image prune -f
