@@ -25,5 +25,5 @@ sudo vim /srv/gitlab-runner/config/config.toml
 ```
 Изменяем `volumes = ["/cache"]` на:
 ```bash
-volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache"]
+volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache", "/var/log/clear-talk/:/var/log/clear-talk/"]
 ```
