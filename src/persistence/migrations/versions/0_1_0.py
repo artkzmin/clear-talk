@@ -117,18 +117,18 @@ def upgrade() -> None:
 
     # Create Plans
     op.execute(
-        "INSERT INTO plan"
-        "(type, days_count, max_messages_count, max_context_tokens, max_output_tokens)"
+        "INSERT INTO plan "
+        "(type, days_count, max_messages_count, max_context_tokens, max_output_tokens) "
         "VALUES ('FREE', NULL, NULL, NULL, NULL)"
     )
     op.execute(
-        "INSERT INTO plan"
-        "(type, days_count, max_messages_count, max_context_tokens, max_output_tokens)"
+        "INSERT INTO plan "
+        "(type, days_count, max_messages_count, max_context_tokens, max_output_tokens) "
         "VALUES ('PRO', NULL, NULL, NULL, NULL)"
     )
     op.execute(
-        "INSERT INTO plan"
-        "(type, days_count, max_messages_count, max_context_tokens, max_output_tokens)"
+        "INSERT INTO plan "
+        "(type, days_count, max_messages_count, max_context_tokens, max_output_tokens) "
         "VALUES ('ADMIN', NULL, NULL, NULL, NULL)"
     )
 
