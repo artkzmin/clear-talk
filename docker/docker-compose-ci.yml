@@ -6,6 +6,8 @@ services:
     restart: unless-stopped
     networks:
       - clear-talk-network
+    volumes:
+      - /var/log/clear-talk/:/app/logs/
 
 networks:
   clear-talk-network:
