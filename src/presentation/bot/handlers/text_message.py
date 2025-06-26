@@ -1,5 +1,6 @@
 from aiogram import Router, F
 from aiogram.types import Message
+from aiogram.enums.parse_mode import ParseMode
 
 from src.application.services.assistant import get_assistant_answer
 from src.application.services.user import get_or_create_telegram_user
@@ -33,4 +34,4 @@ async def handle_single(msg: Message):
         answer = "Достигнут лимит сообщений"
     except PlanTokensLimitException:
         answer = "Достигнут лимит токенов"
-    await msg.answer(answer)
+    await msg.answer(answer, parse_mode=ParseMode.MARKDOWN)
