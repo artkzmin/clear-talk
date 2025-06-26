@@ -14,44 +14,56 @@ class MessageService:
 
     async def _create_message(
         self,
-        message: InputMessage,
+        input_message: InputMessage,
         sender: MessageSenderType,
         commit: bool = False,
-    ) -> UUID:
-        last_message = await self._storage.message.get_last_message(message.user_id)
+    ) -> DecryptedMessage:
+        last_message = await self._storage.message.get_last_message(
+            input_message.user_id
+        )
         if last_message is not None:
             if last_message.sender == sender:
                 raise LastMessageSenderRepeatsException()
             previous_message_id = last_message.id
         else:
             previous_message_id = None
+
+        now = datetime.now()
         message = EncryptedMessage(
-            encrypted_content=self._encryptor.encrypt(message.content),
+            encrypted_content=self._encryptor.encrypt(input_message.content),
             sender=sender,
             previous_message_id=previous_message_id,
-            user_id=message.user_id,
-            created_at=datetime.now(),
+            user_id=input_message.user_id,
+            created_at=now,
         )
 
         message_id = await self._storage.message.create_message(message)
         if commit:
             await self._storage.commit()
-        return message_id
+
+        return DecryptedMessage(
+            id=message_id,
+            sender=sender,
+            content=input_message.content,
+            previous_message_id=previous_message_id,
+            user_id=input_message.user_id,
+            created_at=now,
+        )
 
     async def create_user_message(
-        self, message: InputMessage, commit: bool = False
-    ) -> UUID:
+        self, input_message: InputMessage, commit: bool = False
+    ) -> DecryptedMessage:
         return await self._create_message(
-            message=message,
+            input_message=input_message,
             sender=MessageSenderType.USER,
             commit=commit,
         )
 
     async def create_assistant_message(
-        self, message: InputMessage, commit: bool = False
-    ) -> UUID:
+        self, input_message: InputMessage, commit: bool = False
+    ) -> DecryptedMessage:
         return await self._create_message(
-            message=message,
+            input_message=input_message,
             sender=MessageSenderType.ASSISTANT,
             commit=commit,
         )

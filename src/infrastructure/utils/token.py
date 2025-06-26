@@ -2,7 +2,7 @@ import tiktoken
 
 from src.infrastructure.config import settings
 
-from src.core.assistant.interfaces import TokenUtilityInterface
+from src.core.plan_checker.interfaces import TokenUtilityInterface
 
 
 class TiktokenTokenUtility(TokenUtilityInterface):

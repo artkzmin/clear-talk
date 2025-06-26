@@ -4,6 +4,7 @@ from sqlalchemy import select, func
 from sqlalchemy.orm import aliased
 
 from src.core.message.entities import EncryptedMessage
+from src.core.message.enums import MessageSenderType
 from src.core.message.interfaces import MessageRepositoryInterface
 
 from src.persistence.models.message import MessageModel
@@ -20,7 +21,7 @@ class MessageRepository(
     mapper = MessageMapper
 
     async def create_message(self, message: EncryptedMessage) -> UUID:
-        return await self.create(entity=message)
+        return (await self.create(entity=message)).id
 
     async def get_last_message(self, user_id: UUID) -> EncryptedMessage | None:
         stmt_subq = (
@@ -86,6 +87,7 @@ class MessageRepository(
             MessageModel.user_id == user_id,
             MessageModel.created_at >= start_date,
             MessageModel.created_at <= end_date,
+            MessageModel.sender == MessageSenderType.USER,
         )
         result = await self.session.execute(stmt)
         return result.scalar()

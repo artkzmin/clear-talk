@@ -15,10 +15,13 @@ class MessageModel(BaseUUIDModel):
     sender: Mapped[MessageSenderType] = mapped_column(nullable=False)
     encrypted_content: Mapped[str] = mapped_column(Text, nullable=False)
     previous_message_id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("message.id"), nullable=True, unique=True
+        UUID(as_uuid=True),
+        ForeignKey("message.id", ondelete="CASCADE"),
+        nullable=True,
+        unique=True,
     )
     user_id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("user.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("user.id", ondelete="CASCADE"), nullable=False
     )
 
     created_at: Mapped[datetime] = mapped_column(

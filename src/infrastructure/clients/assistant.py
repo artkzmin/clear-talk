@@ -1,3 +1,4 @@
+from typing import Optional
 from langchain_openai import ChatOpenAI
 from langchain.schema import (
     HumanMessage,
@@ -25,11 +26,15 @@ class OpenAIAssistantClient(AssistantClientInterface):
         )
 
     async def get_chat_completion_answer(
-        self, messages_chain: list[DecryptedMessage]
+        self,
+        messages_chain: list[DecryptedMessage],
+        max_output_tokens: Optional[int],
     ) -> str:
         lc_messages = self._convert_messages_chain_to_lc_messages(messages_chain)
 
-        response = await self._chat.agenerate(messages=[lc_messages])
+        response = await self._chat.agenerate(
+            messages=[lc_messages], max_tokens=max_output_tokens
+        )
         return response.generations[0][0].text
 
     def _convert_messages_chain_to_lc_messages(

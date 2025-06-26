@@ -42,3 +42,6 @@ class UserRepository(
         return await self.get_one_or_none(
             UserModel.hashed_external_id == hashed_external_user_id
         )
+
+    async def get_user_by_id(self, user_id: UUID) -> User | None:
+        return await self.get_one_or_none(UserModel.id == user_id)

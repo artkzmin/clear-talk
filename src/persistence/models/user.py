@@ -21,10 +21,10 @@ class UserModel(BaseUUIDModel):
         nullable=False, server_default=text("now()")
     )
     plan_id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("plan.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("plan.id", ondelete="SET NULL"), nullable=True
     )
     plan_activated_at: Mapped[datetime] = mapped_column(
-        nullable=False, server_default=text("now()")
+        nullable=True, server_default=text("now()")
     )
 
     __table_args__ = (

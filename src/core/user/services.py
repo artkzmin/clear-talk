@@ -1,28 +1,28 @@
 from datetime import datetime
+from uuid import UUID
 from src.core.interfaces import StorageInterface
 from src.core.user.entities import InputUser, User
 from src.core.plan.enums import PlanType
 from src.core.plan.services import PlanService
-from src.core.message.services import MessageService
 from src.core.user.exceptions import UserNotFoundException, UserAlreadyExistsException
-from src.core.interfaces import HasherUtilityInterface, EncryptorUtilityInterface
+from src.core.interfaces import HasherUtilityInterface
 
 
 class UserService:
     def __init__(
-        self,
-        storage: StorageInterface,
-        hasher: HasherUtilityInterface,
-        encryptor: EncryptorUtilityInterface,
+        self, storage: StorageInterface, hasher_utility: HasherUtilityInterface
     ) -> None:
         self._storage = storage
         self._plan_service = PlanService(storage=storage)
-        self._message_service = MessageService(storage=storage, encryptor=encryptor)
-        self._hasher = hasher
-        self._encryptor = encryptor
+        self._hasher = hasher_utility
 
     async def create_user(self, input_user: InputUser) -> User:
-        plan = await self._plan_service.get_plan(type_=PlanType.FREE)
+        """
+        Raises:
+            src.core.user.exceptions.UserAlreadyExistsException:
+                If a user with the same ID or external_id already exists.
+        """
+        plan = await self._plan_service.get_plan_by_type(type_=PlanType.FREE)
         now = datetime.now()
         user = User(
             hashed_external_id=self._hasher.get_hash(input_user.external_id),
@@ -51,7 +51,13 @@ class UserService:
             raise UserNotFoundException()
         return user
 
-    async def get_or_create_user(self, input_user: InputUser) -> User:
+    async def get_or_create_external_user(self, input_user: InputUser) -> User:
         if await self.is_user_exists(input_user.external_id):
             return await self.get_user_by_external_id(input_user.external_id)
         return await self.create_user(input_user)
+
+    async def get_user_by_id(self, user_id: UUID) -> User:
+        user = await self._storage.user.get_user_by_id(user_id)
+        if user is None:
+            raise UserNotFoundException()
+        return user
