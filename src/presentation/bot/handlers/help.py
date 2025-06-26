@@ -7,4 +7,4 @@ router = Router()
 
 @router.message(Command("help"))
 async def handle_help(msg: Message):
-    await msg.answer("Привет, я бот — ИИ-психолог")
+    await msg.answer("Привет, я бот — ИИ-помощник")
