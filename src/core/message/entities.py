@@ -7,7 +7,6 @@ from src.core.message.enums import MessageSenderType
 class EncryptedMessage(BaseEntityUUID):
     sender: MessageSenderType
     encrypted_content: str
-    previous_message_id: UUID | None = None
     user_id: UUID
     created_at: datetime
 
@@ -15,7 +14,6 @@ class EncryptedMessage(BaseEntityUUID):
 class DecryptedMessage(BaseEntityUUID):
     sender: MessageSenderType
     content: str
-    previous_message_id: UUID | None = None
     user_id: UUID
     created_at: datetime
 

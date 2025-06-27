@@ -1,7 +1,6 @@
 from uuid import UUID
 from datetime import datetime
 from sqlalchemy import select, func
-from sqlalchemy.orm import aliased
 
 from src.core.message.entities import EncryptedMessage
 from src.core.message.enums import MessageSenderType
@@ -24,70 +23,40 @@ class MessageRepository(
         return (await self.create(entity=message)).id
 
     async def get_last_message(self, user_id: UUID) -> EncryptedMessage | None:
-        stmt_subq = (
-            select(MessageModel.previous_message_id)
-            .filter(
-                MessageModel.user_id == user_id,
-                MessageModel.previous_message_id.isnot(None),
-            )
-            .subquery()
-        )
-        stmt = (
+        query = (
             select(MessageModel)
             .filter(
-                MessageModel.id.notin_(select(stmt_subq)),
                 MessageModel.user_id == user_id,
             )
+            .order_by(MessageModel.created_at.desc())
             .limit(1)
         )
-        result = await self.session.execute(stmt)
+        result = await self.session.execute(query)
         model = result.scalars().one_or_none()
         if model is None:
             return None
         return self.mapper.to_entity(model)
 
     async def get_messages_chain(self, user_id: UUID) -> list[EncryptedMessage]:
-        start_stmt = (
-            select(MessageModel.id)
+        query = (
+            select(MessageModel)
             .filter(
                 MessageModel.user_id == user_id,
-                MessageModel.previous_message_id.is_(None),
             )
-            .limit(1)
+            .order_by(MessageModel.created_at.asc())
         )
-
-        start_result = await self.session.execute(start_stmt)
-        start_message_id = start_result.scalar_one_or_none()
-
-        if start_message_id is None:
-            return []
-
-        recursive_cte = (
-            select(MessageModel.id)
-            .filter(MessageModel.id == start_message_id)
-            .cte(name="message_chain", recursive=True)
-        )
-        message_alias = aliased(MessageModel)
-        recursive_cte = recursive_cte.union_all(
-            select(message_alias.id).filter(
-                message_alias.previous_message_id == recursive_cte.c.id
-            )
-        )
-        stmt = select(MessageModel).filter(
-            MessageModel.id.in_(select(recursive_cte.c.id))
-        )
-        result = await self.session.execute(stmt)
+        result = await self.session.execute(query)
         models = result.scalars().all()
         return [self.mapper.to_entity(model) for model in models]
 
     async def get_count_user_messages_in_datetime_interval(
         self, user_id: UUID, start_date: datetime, end_date: datetime
     ) -> int:
-        stmt = select(func.count(MessageModel.id)).filter(
+        query = select(func.count(MessageModel.id)).filter(
             MessageModel.user_id == user_id,
             MessageModel.created_at >= start_date,
             MessageModel.created_at <= end_date,
             MessageModel.sender == MessageSenderType.USER,
         )
-        result = await self.session.execute(stmt)
+        result = await self.session.execute(query)
         return result.scalar()

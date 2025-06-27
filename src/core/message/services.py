@@ -24,15 +24,11 @@ class MessageService:
         if last_message is not None:
             if last_message.sender == sender:
                 raise LastMessageSenderRepeatsException()
-            previous_message_id = last_message.id
-        else:
-            previous_message_id = None
 
         now = datetime.now()
         message = EncryptedMessage(
             encrypted_content=self._encryptor.encrypt(input_message.content),
             sender=sender,
-            previous_message_id=previous_message_id,
             user_id=input_message.user_id,
             created_at=now,
         )
@@ -45,7 +41,6 @@ class MessageService:
             id=message_id,
             sender=sender,
             content=input_message.content,
-            previous_message_id=previous_message_id,
             user_id=input_message.user_id,
             created_at=now,
         )
@@ -75,7 +70,6 @@ class MessageService:
                 id=m.id,
                 sender=m.sender,
                 content=self._encryptor.decrypt(m.encrypted_content),
-                previous_message_id=m.previous_message_id,
                 user_id=m.user_id,
                 created_at=m.created_at,
             )
