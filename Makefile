@@ -1,6 +1,3 @@
-venv-run:
-	. venv/bin/activate
-
 run:
 	python -m src.main
 
@@ -11,7 +8,7 @@ format:
 	ruff format --check
 
 test:
-	pytest tests/ -s -v
+	pytest -s -v
 
 alembic:
 	alembic upgrade head
