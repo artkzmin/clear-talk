@@ -14,6 +14,7 @@ build-job:
   stage: build
   before_script:
     - cp ${ENV} config/.env
+    - cp ${SYSTEM_MESSAGE} config/system_message.conf
   script:
     - docker build --network host -f docker/Dockerfile -t clear-talk-image .
 

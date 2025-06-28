@@ -1,25 +1,26 @@
 import os
 from pathlib import Path
-from enum import StrEnum
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Final
 from dotenv import load_dotenv
-
+from src.infrastructure.config.enums import ModeType, ServiceType
 
 CONFIG_FILE_NAME: Final = os.getenv("CLEAR_TALK_CONFIG", ".env")
 
-BASE_DIR: Final = Path(__file__).parent.parent.parent
-ENV_PATH: Final = BASE_DIR / "config" / CONFIG_FILE_NAME
+BASE_DIR: Final = Path(__file__).parent.parent.parent.parent
+CONFIG_DIR: Final = BASE_DIR / "config"
+
+ENV_PATH: Final = CONFIG_DIR / CONFIG_FILE_NAME
+
+SYSTEM_MESSAGE_FILE_NAME: Final = "system_message.conf"
+SYSTEM_MESSAGE_PATH: Final = CONFIG_DIR / SYSTEM_MESSAGE_FILE_NAME
 
 load_dotenv(ENV_PATH, override=True)
 
 
-class ModeType(StrEnum):
-    TEST = "TEST"
-    LOCAL = "LOCAL"
-    DEV = "DEV"
-    PROD = "PROD"
+def load_system_message() -> str:
+    return SYSTEM_MESSAGE_PATH.read_text(encoding="utf-8")
 
 
 class Settings(BaseSettings):
@@ -44,7 +45,7 @@ class Settings(BaseSettings):
             temperature: float
 
         model: AssistantModelSettings
-        system_message: str
+        system_message: str = Field(default_factory=load_system_message)
         api_key: str
         use_proxy: bool
 
@@ -80,6 +81,7 @@ class Settings(BaseSettings):
             return f"socks5://{self.user}:{self.password}@{self.host}:{self.port}"
 
     mode: ModeType
+    service: ServiceType
     db: DBSettings
     assistant: AssistantSettings
     telegram: TelegramSettings

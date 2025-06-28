@@ -10,3 +10,5 @@ docs/
 *.pyc
 .gitignore
 .python-version
+*.dist
+*.md
