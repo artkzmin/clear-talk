@@ -1,11 +1,12 @@
 from datetime import datetime
 from uuid import UUID
-from src.core.interfaces import StorageInterface
+
+from src.core.interfaces import StorageInterface, HasherUtilityInterface
 from src.core.user.entities import InputUser, User
-from src.core.plan.enums import PlanType
-from src.core.plan.services import PlanService
 from src.core.user.exceptions import UserNotFoundException, UserAlreadyExistsException
-from src.core.interfaces import HasherUtilityInterface
+
+from src.core.plan.services import PlanService
+from src.core.plan.enums import PlanType
 
 
 class UserService:
@@ -40,20 +41,24 @@ class UserService:
         user.id = user_id
         return user
 
-    async def is_user_exists(self, external_user_id: str) -> bool:
-        hashed_external_user_id = self._hasher.get_hash(external_user_id)
-        return await self._storage.user.is_user_exists(hashed_external_user_id)
+    async def is_user_exists(self, input_user: InputUser) -> bool:
+        hashed_external_user_id = self._hasher.get_hash(input_user.external_id)
+        return await self._storage.user.is_user_exists(
+            hashed_external_user_id, external_service=input_user.external_service
+        )
 
-    async def get_user_by_external_id(self, external_user_id: str) -> User:
-        hashed_external_user_id = self._hasher.get_hash(external_user_id)
-        user = await self._storage.user.get_user_by_external_id(hashed_external_user_id)
+    async def get_user_by_external_id(self, input_user: InputUser) -> User:
+        hashed_external_user_id = self._hasher.get_hash(input_user.external_id)
+        user = await self._storage.user.get_user_by_external_id(
+            hashed_external_user_id, external_service=input_user.external_service
+        )
         if user is None:
             raise UserNotFoundException()
         return user
 
     async def get_or_create_external_user(self, input_user: InputUser) -> User:
-        if await self.is_user_exists(input_user.external_id):
-            return await self.get_user_by_external_id(input_user.external_id)
+        if await self.is_user_exists(input_user):
+            return await self.get_user_by_external_id(input_user)
         return await self.create_user(input_user)
 
     async def get_user_by_id(self, user_id: UUID) -> User:
