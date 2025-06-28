@@ -14,5 +14,6 @@ COPY docker/run.sh docker/run.sh
 RUN chmod +x docker/run.sh
 
 COPY config/.env config/.env
+COPY config/system_message.conf config/system_message.conf
 
 CMD ["sh", "docker/run.sh"]
