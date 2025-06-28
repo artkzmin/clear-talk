@@ -21,3 +21,6 @@ docker-logs:
 
 docker-clear:
 	docker image prune -f
+
+cloc:
+	git ls-files | xargs cloc
