@@ -1,0 +1,11 @@
+[tool.coverage.run]
+branch = true
+source = ["src"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+
+[tool.pytest.ini_options]
+pythonpath = [".", "src"]
+asyncio_mode = "auto"

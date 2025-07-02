@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import timedelta, date
 from uuid import UUID
 from src.core.plan.services import PlanService
 from src.core.message.services import MessageService
@@ -66,21 +66,21 @@ class PlanCheckerService:
                 raise PlanTokensLimitException()
 
     async def _is_plan_active(
-        self, plan_activated_at: datetime, plan_days_count: int
+        self, plan_activated_at: date, plan_days_count: int
     ) -> bool:
-        return plan_activated_at + timedelta(days=plan_days_count) > datetime.now()
+        return plan_activated_at + timedelta(days=plan_days_count) > date.today()
 
     async def _is_plan_has_messages_count(
         self,
         user_id: UUID,
-        plan_activated_at: datetime,
+        plan_activated_at: date,
         plan_max_messages_count: int,
     ) -> bool:
         return (
-            await self._message_service.get_count_user_messages_in_datetime_interval(
+            await self._message_service.get_count_user_messages_in_date_interval(
                 user_id=user_id,
                 start_date=plan_activated_at,
-                end_date=datetime.now(),
+                end_date=date.today(),
             )
             < plan_max_messages_count
         )

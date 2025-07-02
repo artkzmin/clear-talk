@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 from sqlalchemy import String, UniqueConstraint, text, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -23,7 +23,7 @@ class UserModel(BaseUUIDModel):
     plan_id: Mapped[UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("plan.id", ondelete="SET NULL"), nullable=True
     )
-    plan_activated_at: Mapped[datetime] = mapped_column(
+    plan_activated_at: Mapped[date] = mapped_column(
         nullable=True, server_default=text("now()")
     )
 

@@ -49,5 +49,5 @@ class PlanRepository(
             max_messages_count=row.max_messages_count,
             max_context_tokens=row.max_context_tokens,
             max_output_tokens=row.max_output_tokens,
-            plan_activated_at=row.created_at,
+            plan_activated_at=row.created_at.date(),
         )

@@ -1,5 +1,5 @@
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, date
 from src.core.interfaces import StorageInterface
 from src.core.message.entities import EncryptedMessage, InputMessage, DecryptedMessage
 from src.core.message.enums import MessageSenderType
@@ -76,9 +76,9 @@ class MessageService:
             for m in messages_chain
         ]
 
-    async def get_count_user_messages_in_datetime_interval(
-        self, user_id: UUID, start_date: datetime, end_date: datetime
+    async def get_count_user_messages_in_date_interval(
+        self, user_id: UUID, start_date: date, end_date: date
     ) -> int:
-        return await self._storage.message.get_count_user_messages_in_datetime_interval(
+        return await self._storage.message.get_count_user_messages_in_date_interval(
             user_id=user_id, start_date=start_date, end_date=end_date
         )

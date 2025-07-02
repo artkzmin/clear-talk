@@ -1,6 +1,6 @@
 from typing import Protocol, runtime_checkable, ClassVar
 from uuid import UUID
-from datetime import datetime
+from datetime import date
 from src.core.abc.interfaces import BaseRepositoryInterface
 from src.core.message.entities import EncryptedMessage
 
@@ -13,8 +13,8 @@ class MessageRepositoryInterface(BaseRepositoryInterface, Protocol):
 
     async def get_messages_chain(self, user_id: UUID) -> list[EncryptedMessage]: ...
 
-    async def get_count_user_messages_in_datetime_interval(
-        self, user_id: UUID, start_date: datetime, end_date: datetime
+    async def get_count_user_messages_in_date_interval(
+        self, user_id: UUID, start_date: date, end_date: date
     ) -> int: ...
 
 

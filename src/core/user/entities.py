@@ -1,6 +1,6 @@
 from pydantic import Field
 from uuid import UUID
-from datetime import datetime
+from datetime import date, datetime
 from src.core.constants import STR_ID_LENGTH, STR_HASH_LENGTH
 from src.core.abc.entities import BaseEntityUUID, BaseEntity
 from src.core.user.enums import ExternalServiceType
@@ -18,4 +18,4 @@ class User(BaseEntityUUID):
     external_service: ExternalServiceType
     created_at: datetime
     plan_id: UUID
-    plan_activated_at: datetime
+    plan_activated_at: date

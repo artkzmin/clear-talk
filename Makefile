@@ -10,6 +10,10 @@ format:
 test:
 	pytest -s -v
 
+coverage:
+	coverage run -m pytest
+	coverage report
+
 alembic:
 	alembic upgrade head
 

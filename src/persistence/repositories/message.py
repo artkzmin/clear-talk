@@ -1,5 +1,5 @@
 from uuid import UUID
-from datetime import datetime
+from datetime import date
 from sqlalchemy import select, func
 
 from src.core.message.entities import EncryptedMessage
@@ -49,8 +49,8 @@ class MessageRepository(
         models = result.scalars().all()
         return [self.mapper.to_entity(model) for model in models]
 
-    async def get_count_user_messages_in_datetime_interval(
-        self, user_id: UUID, start_date: datetime, end_date: datetime
+    async def get_count_user_messages_in_date_interval(
+        self, user_id: UUID, start_date: date, end_date: date
     ) -> int:
         query = select(func.count(MessageModel.id)).filter(
             MessageModel.user_id == user_id,

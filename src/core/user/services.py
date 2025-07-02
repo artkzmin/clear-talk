@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from uuid import UUID
 
 from src.core.interfaces import StorageInterface, HasherUtilityInterface
@@ -24,13 +24,14 @@ class UserService:
                 If a user with the same ID or external_id already exists.
         """
         plan = await self._plan_service.get_plan_by_type(type_=PlanType.FREE)
+        today = date.today()
         now = datetime.now()
         user = User(
             hashed_external_id=self._hasher.get_hash(input_user.external_id),
             external_service=input_user.external_service,
             created_at=now,
             plan_id=plan.id,
-            plan_activated_at=now,
+            plan_activated_at=today,
         )
         try:
             user_id = await self._storage.user.create_user(user)
