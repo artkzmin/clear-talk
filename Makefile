@@ -1,6 +1,9 @@
 run:
 	python -m src.main
 
+run-venv:
+	. venv/bin/activate && python -m src.main
+
 lint:
 	ruff check
 
