@@ -9,6 +9,7 @@ from src.core.plan_checker.exceptions import (
     PlanMessagesCountLimitException,
     PlanTokensLimitException,
 )
+from src.core.plan_checker.entities import RemainingUserPlan
 from src.core.plan_checker.interfaces import TokenUtilityInterface
 from src.core.interfaces import HasherUtilityInterface
 from src.core.message.entities import InputMessage
@@ -65,10 +66,55 @@ class PlanCheckerService:
             ):
                 raise PlanTokensLimitException()
 
+    async def get_remaining_user_plan(self, user_id: UUID) -> RemainingUserPlan:
+        user_plan = await self._plan_service.get_user_plan_by_user_id(user_id=user_id)
+        count_user_messages = (
+            await self._get_count_messages_in_current_plan_date_interval(
+                user_id=user_id,
+                plan_activated_at=user_plan.plan_activated_at,
+            )
+        )
+
+        remaining_days_count = (
+            (
+                user_plan.plan_activated_at
+                + timedelta(days=user_plan.days_count)
+                - date.today()
+            ).days
+            if user_plan.days_count
+            else None
+        )
+
+        remaining_messages_count = (
+            user_plan.max_messages_count - count_user_messages
+            if user_plan.max_messages_count
+            else None
+        )
+
+        return RemainingUserPlan(
+            remaining_days_count=remaining_days_count,
+            remaining_messages_count=remaining_messages_count,
+            plan_activated_at=user_plan.plan_activated_at,
+            days_count=user_plan.days_count,
+            max_messages_count=user_plan.max_messages_count,
+            max_context_tokens=user_plan.max_context_tokens,
+            max_output_tokens=user_plan.max_output_tokens,
+            type_=user_plan.type_,
+        )
+
     async def _is_plan_active(
         self, plan_activated_at: date, plan_days_count: int
     ) -> bool:
         return plan_activated_at + timedelta(days=plan_days_count) > date.today()
+
+    async def _get_count_messages_in_current_plan_date_interval(
+        self, user_id: UUID, plan_activated_at: date
+    ) -> int:
+        return await self._message_service.get_count_user_messages_in_date_interval(
+            user_id=user_id,
+            start_date=plan_activated_at,
+            end_date=date.today(),
+        )
 
     async def _is_plan_has_messages_count(
         self,
@@ -77,10 +123,9 @@ class PlanCheckerService:
         plan_max_messages_count: int,
     ) -> bool:
         return (
-            await self._message_service.get_count_user_messages_in_date_interval(
+            await self._get_count_messages_in_current_plan_date_interval(
                 user_id=user_id,
-                start_date=plan_activated_at,
-                end_date=date.today(),
+                plan_activated_at=plan_activated_at,
             )
             < plan_max_messages_count
         )

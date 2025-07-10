@@ -53,6 +53,8 @@ class Settings(BaseSettings):
         admin_id: int
         bot_token: str
 
+        payment_provider_token: str
+
     class LogsSettings(BaseModel):
         dir_path: Path
         max_log_files: int

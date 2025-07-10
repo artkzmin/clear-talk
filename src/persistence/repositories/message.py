@@ -1,5 +1,5 @@
 from uuid import UUID
-from datetime import date
+from datetime import date, timedelta
 from sqlalchemy import select, func
 
 from src.core.message.entities import EncryptedMessage
@@ -55,7 +55,7 @@ class MessageRepository(
         query = select(func.count(MessageModel.id)).filter(
             MessageModel.user_id == user_id,
             MessageModel.created_at >= start_date,
-            MessageModel.created_at <= end_date,
+            MessageModel.created_at <= end_date + timedelta(days=1),
             MessageModel.sender == MessageSenderType.USER,
         )
         result = await self.session.execute(query)

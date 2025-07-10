@@ -1,8 +1,10 @@
 from aiogram import BaseMiddleware
 from aiogram.types import Message
+from aiogram.enums import ParseMode
+from aiogram.utils import markdown
+
 from src.infrastructure.config import settings, ModeType
 from src.infrastructure.logger import logger_app
-
 from src.infrastructure.utils.hasher import HmacSha256Hasher
 
 logger = logger_app.getChild(__name__)
@@ -15,7 +17,9 @@ class OnlyAdminMiddleware(BaseMiddleware):
             and event.from_user.id != settings.telegram.admin_id
         ):
             await event.answer(
-                f"Извините, доступ запрещён. Ваш ID в Telegram: {event.from_user.id}"
+                f"❌ {markdown.bold('Извините, доступ запрещён')}"
+                f"\n\nВаш ID в Telegram: {markdown.code(event.from_user.id)}",
+                parse_mode=ParseMode.MARKDOWN,
             )
             logger.info(
                 "Access denied for user %s",

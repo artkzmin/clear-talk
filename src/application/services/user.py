@@ -6,14 +6,18 @@ from src.infrastructure.utils.hasher import HmacSha256Hasher
 
 
 @inject_storage
-async def get_or_create_user(input_user: InputUser, storage: Storage) -> User:
+async def _get_or_create_user(input_user: InputUser, storage: Storage) -> User:
     return await UserService(
         storage=storage, hasher_utility=HmacSha256Hasher()
     ).get_or_create_external_user(input_user)
 
 
+async def get_or_create_user(input_user: InputUser) -> User:
+    return await _get_or_create_user(input_user)
+
+
 @inject_storage
-async def get_user_by_external_id(input_user: InputUser, storage: Storage) -> User:
+async def _get_user_by_external_id(input_user: InputUser, storage: Storage) -> User:
     """
     Raises:
         src.core.user.exceptions.UserNotFoundException:
@@ -22,6 +26,15 @@ async def get_user_by_external_id(input_user: InputUser, storage: Storage) -> Us
     return await UserService(
         storage=storage, hasher_utility=HmacSha256Hasher()
     ).get_user_by_external_id(input_user)
+
+
+async def get_user_by_external_id(input_user: InputUser) -> User:
+    """
+    Raises:
+        src.core.user.exceptions.UserNotFoundException:
+            If the user is not found.
+    """
+    return await _get_user_by_external_id(input_user)
 
 
 async def get_or_create_telegram_user(telegram_user_id: int) -> User:

@@ -9,7 +9,7 @@ from src.infrastructure.utils.hasher import HmacSha256Hasher
 
 
 @inject_storage
-async def get_assistant_answer(message_input: InputMessage, storage: Storage) -> str:
+async def _get_assistant_answer(message_input: InputMessage, storage: Storage) -> str:
     """
     Raises:
         src.core.plan_checker.exceptions.PlanNotActiveException:
@@ -31,3 +31,16 @@ async def get_assistant_answer(message_input: InputMessage, storage: Storage) ->
         assistant_client=OpenAIAssistantClient(),
         encryptor_utility=FernetEncryptorUtility(),
     ).get_assistant_answer(message_input)
+
+
+async def get_assistant_answer(message_input: InputMessage) -> str:
+    """
+    Raises:
+        src.core.plan_checker.exceptions.PlanNotActiveException:
+            If the plan is not active.
+        src.core.plan_checker.exceptions.PlanMessagesCountLimitException:
+            If the plan has reached the maximum number of messages.
+        src.core.plan_checker.exceptions.PlanTokensLimitException:
+            If the plan has reached the maximum number of tokens.
+    """
+    return await _get_assistant_answer(message_input)
